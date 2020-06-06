@@ -5,14 +5,13 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits import mplot3d
 
-plt.style.use('fivethirtyeight')
+plt.style.use('ggplot')
 
 x_values = []
 y_values = []
 z_values = []
 q_values = []
 
-counter = 0
 
 index = count()
 
@@ -53,16 +52,14 @@ def animate(i):
         #counter = 0
         plt.cla() # clears the values of the graph
         
-    plt.plot(x_values, y_values,linestyle='--')
-    plt.plot(x_values, z_values,linestyle='--')
-    plt.plot(x_values, q_values,linestyle='--')
+    plt.plot(x_values, y_values)
+    plt.plot(x_values, z_values)
+    plt.plot(x_values, q_values)
     
     ax.legend(["Value 1 ","Value 2","Value 3"])
     ax.set_xlabel("X values")
     ax.set_ylabel("Values for Three different variable")
     plt.title('Dynamic line graphs')
-    
-    time.sleep(.25) # keep refresh rate of 0.25 seconds
 
 fig, ax = plt.subplots()
 ani = FuncAnimation(plt.gcf(), animate, 10)
