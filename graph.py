@@ -1,67 +1,53 @@
 import random
-from itertools import count
-import time
+import csv
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from mpl_toolkits import mplot3d
+from itertools import count
 
-plt.style.use('ggplot')
+def animate(i, fig, ax, day_values, curico_cum_actives_values, linares_cum_actives_values, talca_cum_actives_values, data_curico, data_linares, data_talca):
 
-x_values = []
-y_values = []
-z_values = []
-q_values = []
+    row_curico = next(data_curico)
+    row_linares = next(data_linares)
+    row_talca = next(data_talca)
+    day = row_curico["Día"]
 
+    curico_cum_actives = row_curico["Activos totales"]
+    linares_cum_actives = row_linares["Activos totales"]
+    talca_cum_actives = row_talca["Activos totales"]
 
-index = count()
+    day_values.append(day)
+    curico_cum_actives_values.append(curico_cum_actives)
+    linares_cum_actives_values.append(linares_cum_actives)
+    talca_cum_actives_values.append(talca_cum_actives)
 
-def animate(i):
-    
-    #print(counter)
-    
+    print(curico_cum_actives,'CURICO')
+    print(linares_cum_actives,'LINARES')
+    print(talca_cum_actives,'TALCA')
 
-    x = next(index) # counter or x variable -> index
-    counter = next(index)
-    print(counter)
-    x_values.append(x)
-    '''
-    Three random value series ->
-    Y : 0-5
-    Z : 3-8
-    Q : 0-10
-    '''
-    y = random.randint(0, 5)
-    z = random.randint(3, 8)
-    q = random.randint(0, 10)
-    # append values to keep graph dynamic
-    # this can be replaced with reading values from a csv files also
-    # or reading values from a pandas dataframe
-    y_values.append(y)
-    z_values.append(z)
-    q_values.append(q)
-    
-    
-    if counter >40:
-        '''
-        This helps in keeping the graph fresh and refreshes values after every 40 timesteps
-        '''
-        x_values.pop(0)
-        y_values.pop(0)
-        z_values.pop(0)
-        q_values.pop(0)
-        #counter = 0
-        plt.cla() # clears the values of the graph
-        
-    plt.plot(x_values, y_values)
-    plt.plot(x_values, z_values)
-    plt.plot(x_values, q_values)
-    
-    ax.legend(["Value 1 ","Value 2","Value 3"])
-    ax.set_xlabel("X values")
-    ax.set_ylabel("Values for Three different variable")
-    plt.title('Dynamic line graphs')
+    plt.plot(day_values, curico_cum_actives_values)
+    plt.plot(day_values, linares_cum_actives_values)
+    plt.plot(day_values, talca_cum_actives_values)
 
-fig, ax = plt.subplots()
-ani = FuncAnimation(plt.gcf(), animate, 10)
-plt.tight_layout()
-plt.show()
+    ax.legend(["Curicó ","Talca", "Linares"])
+    ax.set_xlabel("Día")
+    ax.set_ylabel("Casos activos")
+    plt.title('Simulación')
+
+def plot_graph():
+    day_values = []
+    curico_cum_actives_values = []
+    linares_cum_actives_values = []
+    talca_cum_actives_values = []
+
+    csv_file_curico = open( 'simulation_Curicó.csv', 'r') 
+    csv_file_linares = open( 'simulation_Linares.csv', 'r')   
+    csv_file_talca = open( 'simulation_Talca.csv', 'r')        
+    data_curico = csv.DictReader(csv_file_curico, delimiter = ',')
+    data_linares = csv.DictReader(csv_file_linares, delimiter = ',')        
+    data_talca = csv.DictReader(csv_file_talca, delimiter = ',')
+
+    fig, ax = plt.subplots()
+    ani = FuncAnimation(plt.gcf(), animate, frames=120, repeat=False, fargs=(fig, ax, day_values, curico_cum_actives_values, linares_cum_actives_values, talca_cum_actives_values, data_curico, data_linares, data_talca), interval=10)
+    plt.tight_layout()
+    plt.show()
+
