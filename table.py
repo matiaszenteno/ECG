@@ -1,20 +1,27 @@
 import tkinter as tk
 
-class ExampleApp(tk.Tk):
-    def __init__(self, curico_weeks_data, linares_weeks_data, talca_weeks_data):
+class TableApp(tk.Tk):
+    def __init__(self, data, target_cases):
+
         tk.Tk.__init__(self)
-        t = SimpleTable(self, 19,10, curico_weeks_data, linares_weeks_data, talca_weeks_data)
+        t = SimpleTable(self, 19,10, data, target_cases)
         t.pack(side="top", fill="x")
         t.set_header()
 
 class SimpleTable(tk.Frame):
-    def __init__(self, parent, rows, columns, curico_weeks_data, linares_weeks_data, talca_weeks_data):
-        # use black background so it "peeks through" to 
-        # form grid lines
+    def __init__(self, 
+                 parent, 
+                 rows, 
+                 columns, 
+                 data,
+                 target_cases):
+
+        self.target_cases = 'Activos' if target_cases else 'Casos'
+
         tk.Frame.__init__(self, parent)
         self._widgets = []
 
-        header_two = ["Activos totales", "Activos críticos totales", "Activos no críticos totales"] 
+        header_two = [f"{self.target_cases} totales", f"{self.target_cases} críticos totales", f"{self.target_cases} no críticos totales"] 
 
         current_row = []
 
@@ -46,22 +53,19 @@ class SimpleTable(tk.Frame):
 
             current_row = []
 
-            print(curico_weeks_data)
-            print(row)
+            curico_row = data[0].iloc[row]
+            linares_row = data[1].iloc[row]
+            talca_row = data[2].iloc[row]
 
-            curico_row = curico_weeks_data.iloc[row]
-            linares_row = linares_weeks_data.iloc[row]
-            talca_row = talca_weeks_data.iloc[row]
-
-            row_data = [curico_row["Activos totales"],
-                        curico_row["Activos críticos totales"],
-                        curico_row["Activos no críticos totales"],
-                        linares_row["Activos totales"],
-                        linares_row["Activos críticos totales"],
-                        linares_row["Activos no críticos totales"],
-                        talca_row["Activos totales"],
-                        talca_row["Activos críticos totales"],
-                        talca_row["Activos no críticos totales"]]
+            row_data = [curico_row[self.target_cases + " totales"],
+                        curico_row[self.target_cases + " críticos totales"],
+                        curico_row[self.target_cases + " no críticos totales"],
+                        linares_row[self.target_cases + " totales"],
+                        linares_row[self.target_cases + " críticos totales"],
+                        linares_row[self.target_cases + " no críticos totales"],
+                        talca_row[self.target_cases + " totales"],
+                        talca_row[self.target_cases + " críticos totales"],
+                        talca_row[self.target_cases + " no críticos totales"]]
 
             label = tk.Label(self, text=row, 
                                     borderwidth=0, width=22)
