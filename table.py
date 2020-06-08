@@ -58,14 +58,14 @@ class SimpleTable(tk.Frame):
             talca_row = data[2].iloc[row]
 
             row_data = [curico_row[self.target_cases + " totales"],
-                        curico_row[self.target_cases + " críticos totales"],
-                        curico_row[self.target_cases + " no críticos totales"],
+                        curico_row[self.target_cases + " criticos totales"],
+                        curico_row[self.target_cases + " no criticos totales"],
                         linares_row[self.target_cases + " totales"],
-                        linares_row[self.target_cases + " críticos totales"],
-                        linares_row[self.target_cases + " no críticos totales"],
+                        linares_row[self.target_cases + " criticos totales"],
+                        linares_row[self.target_cases + " no criticos totales"],
                         talca_row[self.target_cases + " totales"],
-                        talca_row[self.target_cases + " críticos totales"],
-                        talca_row[self.target_cases + " no críticos totales"]]
+                        talca_row[self.target_cases + " criticos totales"],
+                        talca_row[self.target_cases + " no criticos totales"]]
 
             label = tk.Label(self, text=row, 
                                     borderwidth=0, width=22)

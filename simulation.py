@@ -22,20 +22,20 @@ def open_book(name):
 
     fnames = ['Día',
               'Nuevos infectados',
-              'Nuevos infectados críticos',  
-              'Nuevos infectados no críticos',
+              'Nuevos infectados criticos',  
+              'Nuevos infectados no criticos',
               'Nuevos recuperados',
-              'Nuevos recuperados críticos',
-              'Nuevos recuperados no críticos',
+              'Nuevos recuperados criticos',
+              'Nuevos recuperados no criticos',
               'Casos totales',
-              'Casos críticos totales',
-              'Casos no críticos totales',
+              'Casos criticos totales',
+              'Casos no criticos totales',
               'Recuperados totales',
-              'Recuperados críticos totales',
-              'Recuperados no críticos totales',
+              'Recuperados criticos totales',
+              'Recuperados no criticos totales',
               'Activos totales',
-              'Activos críticos totales',
-              'Activos no críticos totales',
+              'Activos criticos totales',
+              'Activos no criticos totales',
     ]
 
     writer = csv.DictWriter(f, fieldnames=fnames)
@@ -97,30 +97,30 @@ def simulate(stat):
             book.writerow({'Día': t,
                 'Nuevos infectados': new_critic_infected 
                                      + new_non_critic_infected,
-                'Nuevos infectados críticos': new_critic_infected,  
-                'Nuevos infectados no críticos': new_non_critic_infected,
+                'Nuevos infectados criticos': new_critic_infected,  
+                'Nuevos infectados no criticos': new_non_critic_infected,
                 'Nuevos recuperados': new_critic_recovered 
                                       + new_non_critic_recovered,
-                'Nuevos recuperados críticos': new_critic_recovered, 
-                'Nuevos recuperados no críticos': new_non_critic_recovered, 
+                'Nuevos recuperados criticos': new_critic_recovered, 
+                'Nuevos recuperados no criticos': new_non_critic_recovered, 
                 'Casos totales': sum(cum_infected.values()),
-                'Casos críticos totales': cum_infected["critic"],
-                'Casos no críticos totales': cum_infected["non_critic"],
+                'Casos criticos totales': cum_infected["critic"],
+                'Casos no criticos totales': cum_infected["non_critic"],
                 'Recuperados totales': sum(cum_recovered.values()),
-                'Recuperados críticos totales': cum_recovered["critic"],
-                'Recuperados no críticos totales': cum_recovered["non_critic"],
+                'Recuperados criticos totales': cum_recovered["critic"],
+                'Recuperados no criticos totales': cum_recovered["non_critic"],
                 'Activos totales': sum(cum_actives.values()),
-                'Activos críticos totales': cum_actives["critic"],
-                'Activos no críticos totales': cum_actives["non_critic"],
+                'Activos criticos totales': cum_actives["critic"],
+                'Activos no criticos totales': cum_actives["non_critic"],
             })
         f.close()
 
     plot_graph(stat)
 
 def summary():
-    curico_data = pd.read_csv('simulation_Curicó.csv')
-    linares_data = pd.read_csv('simulation_Linares.csv')
-    talca_data = pd.read_csv('simulation_Talca.csv')
+    curico_data = pd.read_csv('simulation_Curicó.csv', encoding='iso-8859-1')
+    linares_data = pd.read_csv('simulation_Linares.csv', encoding='iso-8859-1')
+    talca_data = pd.read_csv('simulation_Talca.csv', encoding='iso-8859-1')
 
     curico_weeks_cum_data = curico_data.groupby(
                                         curico_data.index // 7).sum()
