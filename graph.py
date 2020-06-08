@@ -60,6 +60,6 @@ def plot_graph(stat):
                             data_curico, 
                             data_linares, 
                             data_talca,
-                            stat), interval=100, frames=120, repeat=False)
+                            stat), interval=60, frames=120, repeat=False)
     plt.tight_layout()
     plt.show()
