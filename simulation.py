@@ -1,26 +1,26 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import csv
-from graph import plot_graph
 
-# Initialize Parameters
+# Initialize parameters
 Locations = [{'name': 'Curicó', 'population': '102710'},
              {'name': 'Linares', 'population': '88422'},
              {'name': 'Talca', 'population': '203873'}]
 p = 0.3
 alpha = 1.3
 beta = 60
-tp = 56 # undefined
+gamma_values = [4, 5, 6]
+tp_values = [56, 42, 28]
 tq = 21
 
-# Simulation Range
+# Simulation range
 simulation_time = 120
 
 def open_book(name):
     f = open(name, "w")
 
-    fnames = ['Día',
+    # Column names
+    fnames = ['Dia',
               'Nuevos infectados',
               'Nuevos infectados criticos',  
               'Nuevos infectados no criticos',
@@ -43,6 +43,7 @@ def open_book(name):
 
     return writer, f
 
+# Return infections in a specific day
 def infections(N,alpha,beta,p,t):
 
     critics = np.floor(np.float_power(10,-5) * p * N 
@@ -53,6 +54,7 @@ def infections(N,alpha,beta,p,t):
                 * np.exp(-t/beta))
     return critics, non_critics
 
+# Return recoveries in a specific day
 def recoveries(N,alpha,beta,p,tp,tq,t):
 
     critics = np.floor(np.float_power(10,-5) * p * N 
@@ -63,7 +65,10 @@ def recoveries(N,alpha,beta,p,tp,tq,t):
                 * np.exp(-(t-tq)/beta)) if t >= tq else 0 
     return critics, non_critics
 
-def simulate(stat):
+# Simulate in a range of days
+def simulate(ventilator):
+    gamma = gamma_values[ventilator - 1]
+    tp = tp_values[ventilator - 1]
 
     for city in Locations:
 
@@ -75,6 +80,7 @@ def simulate(stat):
         book , f = open_book(f"simulation_{city['name']}.csv")
         N = int(city['population'])
 
+        # Iterate over days
         for t in range(simulation_time + 1):
             new_critic_infected, new_non_critic_infected = infections(
                                                         N,alpha,beta,p,t)
@@ -94,7 +100,9 @@ def simulate(stat):
             cum_actives["critic"] += delta_critic_actives
             cum_actives["non_critic"] += delta_non_critic_actives
 
-            book.writerow({'Día': t,
+            # Write info in csv
+            book.writerow({
+                'Dia': t,
                 'Nuevos infectados': new_critic_infected 
                                      + new_non_critic_infected,
                 'Nuevos infectados criticos': new_critic_infected,  
@@ -115,38 +123,140 @@ def simulate(stat):
             })
         f.close()
 
-    plot_graph(stat)
+    summary()
 
+# Group simulation stats by weeks
 def summary():
+    # Read csv
     curico_data = pd.read_csv('simulation_Curicó.csv', encoding='iso-8859-1')
     linares_data = pd.read_csv('simulation_Linares.csv', encoding='iso-8859-1')
     talca_data = pd.read_csv('simulation_Talca.csv', encoding='iso-8859-1')
 
+    ### First city ###
     curico_weeks_cum_data = curico_data.groupby(
-                                        curico_data.index // 7).sum()
+                    curico_data.index // 7).agg(**{
+                        'Dia': ('Dia', 'sum'),
+                        'Nuevos infectados': ('Nuevos infectados', 'sum'),
+                        'Nuevos infectados criticos': ('Nuevos infectados criticos', 'sum') ,
+                        'Nuevos infectados no criticos': ('Nuevos infectados no criticos', 'sum'),
+                        'Nuevos recuperados': ('Nuevos recuperados', 'sum'),
+                        'Nuevos recuperados criticos': ('Nuevos recuperados criticos', 'sum'),
+                        'Nuevos recuperados no criticos': ( 'Nuevos recuperados no criticos', 'sum'),
+                        'Casos totales': ('Casos totales', 'sum'),
+                        'Casos criticos totales': ('Casos criticos totales', 'sum'),
+                        'Casos no criticos totales': ('Casos no criticos totales', 'sum'),
+                        'Recuperados totales': ( 'Recuperados totales', 'sum'),
+                        'Recuperados criticos totales': ('Recuperados criticos totales', 'sum'),
+                        'Recuperados no criticos totales': ('Recuperados no criticos totales', 'sum'),
+                        'Activos totales': ('Activos totales', 'sum'),
+                        'Activos criticos totales': ( 'Activos criticos totales', 'sum'),
+                        'Activos no criticos totales': ('Activos no criticos totales', 'sum'),
+                        'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
+                    })
+
+    # Calculate required ventilators
+    curico_weeks_cum_data['Ventiladores requeridos'] = (
+            curico_weeks_cum_data['Maximo activos criticos acumulado'] 
+            - curico_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
+
+    # Drop unnecessary columns
+    curico_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
+
+    # Rename index
+    curico_weeks_cum_data.index.names = ['Semana']
+
+    ### Second city ###
     linares_weeks_cum_data = linares_data.groupby(
-                                        linares_data.index // 7).sum()
+                    linares_data.index // 7).agg(**{
+                        'Dia': ('Dia', 'sum'),
+                        'Nuevos infectados': ('Nuevos infectados', 'sum'),
+                        'Nuevos infectados criticos': ('Nuevos infectados criticos', 'sum') ,
+                        'Nuevos infectados no criticos': ('Nuevos infectados no criticos', 'sum'),
+                        'Nuevos recuperados': ('Nuevos recuperados', 'sum'),
+                        'Nuevos recuperados criticos': ('Nuevos recuperados criticos', 'sum'),
+                        'Nuevos recuperados no criticos': ( 'Nuevos recuperados no criticos', 'sum'),
+                        'Casos totales': ('Casos totales', 'sum'),
+                        'Casos criticos totales': ('Casos criticos totales', 'sum'),
+                        'Casos no criticos totales': ('Casos no criticos totales', 'sum'),
+                        'Recuperados totales': ( 'Recuperados totales', 'sum'),
+                        'Recuperados criticos totales': ('Recuperados criticos totales', 'sum'),
+                        'Recuperados no criticos totales': ('Recuperados no criticos totales', 'sum'),
+                        'Activos totales': ('Activos totales', 'sum'),
+                        'Activos criticos totales': ( 'Activos criticos totales', 'sum'),
+                        'Activos no criticos totales': ('Activos no criticos totales', 'sum'),
+                        'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
+                    })
+
+    # Calculate required ventilators
+    linares_weeks_cum_data['Ventiladores requeridos'] = (
+            linares_weeks_cum_data['Maximo activos criticos acumulado'] 
+            - linares_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
+
+    # Drop unnecessary columns
+    linares_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
+
+    # Rename index
+    linares_weeks_cum_data.index.names = ['Semana']
+
+    ### Third city ###
     talca_weeks_cum_data = talca_data.groupby(
-                                        talca_data.index // 7).sum()
+                    talca_data.index // 7).agg(**{
+                        'Dia': ('Dia', 'sum'),
+                        'Nuevos infectados': ('Nuevos infectados', 'sum'),
+                        'Nuevos infectados criticos': ('Nuevos infectados criticos', 'sum') ,
+                        'Nuevos infectados no criticos': ('Nuevos infectados no criticos', 'sum'),
+                        'Nuevos recuperados': ('Nuevos recuperados', 'sum'),
+                        'Nuevos recuperados criticos': ('Nuevos recuperados criticos', 'sum'),
+                        'Nuevos recuperados no criticos': ( 'Nuevos recuperados no criticos', 'sum'),
+                        'Casos totales': ('Casos totales', 'sum'),
+                        'Casos criticos totales': ('Casos criticos totales', 'sum'),
+                        'Casos no criticos totales': ('Casos no criticos totales', 'sum'),
+                        'Recuperados totales': ( 'Recuperados totales', 'sum'),
+                        'Recuperados criticos totales': ('Recuperados criticos totales', 'sum'),
+                        'Recuperados no criticos totales': ('Recuperados no criticos totales', 'sum'),
+                        'Activos totales': ('Activos totales', 'sum'),
+                        'Activos criticos totales': ( 'Activos criticos totales', 'sum'),
+                        'Activos no criticos totales': ('Activos no criticos totales', 'sum'),
+                        'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
+                    })
 
-    curico_weeks_mean_data = curico_data.groupby(
-                                        curico_data.index // 7).mean().round(2)
-    linares_weeks_mean_data = linares_data.groupby(
-                                        linares_data.index // 7).mean().round(2)
-    talca_weeks_mean_data = talca_data.groupby(
-                                        talca_data.index // 7).mean().round(2)
+    # Calculate required ventilators
+    talca_weeks_cum_data['Ventiladores requeridos'] = (
+            talca_weeks_cum_data['Maximo activos criticos acumulado'] 
+            - talca_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
 
-    result = {"cum":
-                [curico_weeks_cum_data,
-                talca_weeks_cum_data,
-                linares_weeks_cum_data],
-              "mean":
-                [curico_weeks_mean_data,
-                talca_weeks_mean_data,
-                linares_weeks_mean_data]
-    }
+    # Drop unnecessary columns
+    talca_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
 
-    return result
+    # Rename index
+    talca_weeks_cum_data.index.names = ['Semana']
+
+
+    # Write info in csv
+    curico_weeks_cum_data.to_csv('simulation_Curicó_per_week.csv')
+    linares_weeks_cum_data.to_csv('simulation_Linares_per_week.csv')
+    talca_weeks_cum_data.to_csv('simulation_Talca_per_week.csv')
+
+    merge_csv()
+
+def merge_csv():
+    df_per_day = pd.concat([
+        pd.read_csv('simulation_Curicó.csv'),
+        pd.read_csv('simulation_Linares.csv'),
+        pd.read_csv('simulation_Talca.csv')
+    ])
+
+    df_per_week = pd.concat([
+        pd.read_csv('simulation_Curicó_per_week.csv'),
+        pd.read_csv('simulation_Linares_per_week.csv'),
+        pd.read_csv('simulation_Talca_per_week.csv')
+    ])
+
+    result_per_day = df_per_day.groupby('Dia', as_index=False).sum()
+    result_per_week = df_per_week.groupby('Semana', as_index=False).sum()
+
+    result_per_day.to_csv('simulation_total.csv', index=False)
+    result_per_week.to_csv('simulation_total_per_week.csv', index=False)
 
 if __name__ == "__main__":
     simulate()

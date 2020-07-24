@@ -1,65 +1,49 @@
-import random
 import csv
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
-from itertools import count
-import pandas as pd
 
 def animate(i, fig, ax, day_values, 
-            curico_cum_actives_values, 
-            linares_cum_actives_values, 
-            talca_cum_actives_values, 
-            data_curico, 
-            data_linares, 
-            data_talca,
-            stat):
+            cum_infected_values, 
+            cum_recovered_values, 
+            cum_actives_values, 
+            data_total):
   
-    row_curico = next(data_curico)
-    row_linares = next(data_linares)
-    row_talca = next(data_talca)
-    day = row_curico["Día"]
+    row = next(data_total)
+    day = row["Dia"]
 
-    curico_cum_actives = row_curico["Activos totales" if stat else "Casos totales"]
-    linares_cum_actives = row_linares["Activos totales" if stat else "Casos totales"]
-    talca_cum_actives = row_talca["Activos totales" if stat else "Casos totales"]
+    cum_infected = row["Casos totales"]
+    cum_recovered = row["Recuperados totales"]
+    cum_actives = row["Activos totales"]
 
     day_values.append(day)
-    curico_cum_actives_values.append(float(curico_cum_actives))
-    linares_cum_actives_values.append(float(linares_cum_actives))
-    talca_cum_actives_values.append(float(talca_cum_actives))
+    cum_infected_values.append(float(cum_infected))
+    cum_recovered_values.append(float(cum_recovered))
+    cum_actives_values.append(float(cum_actives))
 
-    plt.plot(day_values, talca_cum_actives_values, color="green")
-    plt.plot(day_values, curico_cum_actives_values, color="red")
-    plt.plot(day_values, linares_cum_actives_values, color="blue")
+    plt.plot(day_values, cum_infected_values, color="green")
+    plt.plot(day_values, cum_recovered_values, color="red")
+    plt.plot(day_values, cum_actives_values, color="blue")
 
-    ax.legend(["Talca","Curicó ","Linares"])
-    ax.set_xlabel("Día")
-    ax.set_ylabel("Casos activos")
+    ax.legend(["Infectados totales", "Recuperados totales", "Activos totales"])
+    ax.set_xlabel("Dia")
     plt.title('Simulación')
 
-def plot_graph(stat):
+def plot_graph():
     
-    csv_file_curico = open('simulation_Curicó.csv',)
-    csv_file_linares = open('simulation_Linares.csv',)  
-    csv_file_talca = open('simulation_Talca.csv',)     
+    csv_file = open('simulation_total.csv',)
 
-    data_curico = csv.DictReader(csv_file_curico, delimiter = ',')
-    data_linares = csv.DictReader(csv_file_linares, delimiter = ',')        
-    data_talca = csv.DictReader(csv_file_talca, delimiter = ',')
+    data_total = csv.DictReader(csv_file, delimiter = ',')
     
     day_values = []
-    curico_cum_actives_values = []
-    linares_cum_actives_values = []
-    talca_cum_actives_values = []
+    cum_infected_values = []
+    cum_recovered_values = []
+    cum_actives_values = []
 
     fig, ax = plt.subplots()
     ani = FuncAnimation(fig, animate, fargs=(fig, ax, day_values, 
-                            curico_cum_actives_values, 
-                            linares_cum_actives_values, 
-                            talca_cum_actives_values, 
-                            data_curico, 
-                            data_linares, 
-                            data_talca,
-                            stat), interval=60, frames=120, repeat=False)
+                            cum_infected_values, 
+                            cum_recovered_values, 
+                            cum_actives_values, 
+                            data_total), interval=60, frames=120, repeat=False)
     plt.tight_layout()
     plt.show()
