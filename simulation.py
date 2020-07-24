@@ -37,6 +37,7 @@ def open_book(name):
               'Activos totales',
               'Activos criticos totales',
               'Activos no criticos totales',
+              'Costo inventario'
     ]
 
     writer = csv.DictWriter(f, fieldnames=fnames)
@@ -121,6 +122,7 @@ def simulate(ventilator):
                 'Activos totales': sum(cum_actives.values()),
                 'Activos criticos totales': cum_actives["critic"],
                 'Activos no criticos totales': cum_actives["non_critic"],
+                'Costo inventario': gamma * alpha * np.exp((-1 * beta * (t))/2790)
             })
         f.close()
 
@@ -152,23 +154,17 @@ def summary(gamma):
                         'Activos totales': ('Activos totales', 'sum'),
                         'Activos criticos totales': ( 'Activos criticos totales', 'sum'),
                         'Activos no criticos totales': ('Activos no criticos totales', 'sum'),
-                        'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
+                        'Ventiladores requeridos': ('Activos criticos totales', 'max'),
                     })
 
     # Rename index
     curico_weeks_cum_data.index.names = ['Semana']
 
-    # Calculate required ventilators
-    curico_weeks_cum_data['Ventiladores requeridos'] = (
-            curico_weeks_cum_data['Maximo activos criticos acumulado'] 
-            - curico_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
-
-    # Calculate purchase and inventory costs
-    curico_weeks_cum_data['Costo inventario'] = gamma * alpha * np.exp((-1 * beta * (curico_weeks_cum_data.index*7))/2790)
+    # Calculate purchase costs
     curico_weeks_cum_data['Costo compra'] = (1/gamma) * (1/alpha) * np.exp((beta * (curico_weeks_cum_data.index*7))/2790)
 
     # Drop unnecessary columns
-    curico_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
+    curico_weeks_cum_data.drop(['Dia'], axis=1, inplace=True)
 
     ### Second city ###
     linares_weeks_cum_data = linares_data.groupby(
@@ -189,23 +185,17 @@ def summary(gamma):
                         'Activos totales': ('Activos totales', 'sum'),
                         'Activos criticos totales': ( 'Activos criticos totales', 'sum'),
                         'Activos no criticos totales': ('Activos no criticos totales', 'sum'),
-                        'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
+                        'Ventiladores requeridos': ('Activos criticos totales', 'max'),
                     })
 
     # Rename index
     linares_weeks_cum_data.index.names = ['Semana']
 
-    # Calculate required ventilators
-    linares_weeks_cum_data['Ventiladores requeridos'] = (
-            linares_weeks_cum_data['Maximo activos criticos acumulado'] 
-            - linares_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
-
-    # Calculate purchase and inventory costs
-    linares_weeks_cum_data['Costo inventario'] = gamma * alpha * np.exp((-1 * beta * (linares_weeks_cum_data.index*7))/2790)
+    # Calculate purchase costs
     linares_weeks_cum_data['Costo compra'] = (1/gamma) * (1/alpha) * np.exp((beta * (linares_weeks_cum_data.index*7))/2790)
 
     # Drop unnecessary columns
-    linares_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
+    linares_weeks_cum_data.drop(['Dia'], axis=1, inplace=True)
 
     ### Third city ###
     talca_weeks_cum_data = talca_data.groupby(
@@ -226,23 +216,17 @@ def summary(gamma):
                         'Activos totales': ('Activos totales', 'sum'),
                         'Activos criticos totales': ( 'Activos criticos totales', 'sum'),
                         'Activos no criticos totales': ('Activos no criticos totales', 'sum'),
-                        'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
+                        'Ventiladores requeridos': ('Activos criticos totales', 'max'),
                     })
 
     # Rename index
     talca_weeks_cum_data.index.names = ['Semana']
 
-    # Calculate required ventilators
-    talca_weeks_cum_data['Ventiladores requeridos'] = (
-            talca_weeks_cum_data['Maximo activos criticos acumulado'] 
-            - talca_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
-
-    # Calculate purchase and inventory costs
-    talca_weeks_cum_data['Costo inventario'] = gamma * alpha * np.exp((-1 * beta * (talca_weeks_cum_data.index*7))/2790)
+    # Calculate purchase costs
     talca_weeks_cum_data['Costo compra'] = (1/gamma) * (1/alpha) * np.exp((beta * (talca_weeks_cum_data.index*7))/2790)
 
     # Drop unnecessary columns
-    talca_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
+    talca_weeks_cum_data.drop(['Dia'], axis=1, inplace=True)
 
 
     # Write info in csv
@@ -265,8 +249,8 @@ def merge_csv():
         pd.read_csv('simulation_Talca_per_week.csv')
     ])
 
-    result_per_day = df_per_day.groupby('Dia', as_index=False).sum()
-    result_per_week = df_per_week.groupby(['Semana','Costo compra','Costo inventario'], as_index=False).sum()
+    result_per_day = df_per_day.groupby(['Dia','Costo inventario'], as_index=False).sum()
+    result_per_week = df_per_week.groupby(['Semana','Costo compra'], as_index=False).sum()
 
     result_per_day.to_csv('simulation_total.csv', index=False)
     result_per_week.to_csv('simulation_total_per_week.csv', index=False)
