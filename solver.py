@@ -5,7 +5,12 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 
-def solver_model(alpha, beta, gamma, limit_period):
+def solver_model():
+    cities = ["Curicó","Linares","Talca","total"]
+    for city in cities:
+        solver_city(city)
+
+def solver_city(city):
 
     model = AbstractModel()
 
@@ -13,29 +18,25 @@ def solver_model(alpha, beta, gamma, limit_period):
     model.T = RangeSet(0,17)
 
     # Parameters
+    model.s = Param(model.T)
+    model.b = Param(model.T)
     model.d = Param(model.T)
 
     # Variables s, b, x, y
-    model.s = Var(model.T, domain=NonNegativeReals)
-    model.b = Var(model.T, domain=NonNegativeReals)
     model.x = Var(model.T, domain=NonNegativeReals)
     model.y = Var(model.T, domain=NonNegativeReals)
 
     # Load data from csv
     data = DataPortal(model=model)
-    data.load(filename="simulation_total_per_week.csv", select=('Semana','Ventiladores requeridos'), param=model.d)
+    data.load(filename="simulation_"+city+"_per_week.csv", select=('Semana','Costo compra'), param=model.b)
+    data.load(filename="simulation_"+city+"_per_week.csv", select=('Semana','Costo inventario'), param=model.s)
+    data.load(filename="simulation_"+city+"_per_week.csv", select=('Semana','Ventiladores requeridos'), param=model.d)
 
     def obj_expression(model):
         #return summation(model.s, model.x) + summation(model.b, model.y)
-        return summation(model.x) + summation(model.y)
+        return summation(model.b, model.x) + summation(model.s, model.y)
 
     model.OBJ = Objective(rule=obj_expression, sense=minimize)
-
-    def purchase_cost_constraint(model, T):
-        return model.s[T] == gamma * alpha * np.exp((-1 * beta * T)/2790)
-
-    def inventory_cost_constraint(model, T):
-        return model.b[T] == (1/gamma) * (1/alpha) * np.exp((beta * T)/2790)
 
     def inventory_constraint(model, T):
         if T:
@@ -47,8 +48,6 @@ def solver_model(alpha, beta, gamma, limit_period):
         return model.y[0] == 0
 
     # The next line creates constraints
-    model.PurchaseCostConstraint = Constraint(model.T, rule=purchase_cost_constraint)
-    model.InventoryCostConstraint = Constraint(model.T, rule=inventory_cost_constraint)
     model.InventoryConstraint = Constraint(model.T, rule=inventory_constraint)
     model.InitialInventoryConstraint = Constraint(rule=initial_inventory_constraint)
 
@@ -56,24 +55,41 @@ def solver_model(alpha, beta, gamma, limit_period):
     instance.pprint()
 
     opt = SolverFactory('glpk')
-    opt.solve(instance) 
-    
-    #### Write data
-    # Print values for each variable explicitly
-    #
-    print("Print values for each variable explicitly")
-    for i in model.x:
-        print (str(model.x[i]), model.x[i].value)
-    for i in model.y:
-        print (str(model.y[i]), model.y[i].value)
-        print("")
+    results = opt.solve(instance, tee=True)
+    results.write()
+    instance.solutions.load_from(results)
 
-    #
-    # Print values for all variables
-    #
-    print("Print values for all variables")
-    for v in model.component_data_objects(Var):
-        print (str(v), v.value)
+    # Set var values
+    vars_values = []
+    for v in instance.component_objects(Var, active=True):
+        var_values = []
+        print ("Variable",v)
+        varobject = getattr(instance, str(v))
+        for index in varobject:
+            var_values.append(varobject[index].value)
+            print ("   ",index, varobject[index].value)
+        vars_values.append(var_values)
+
+    df_var_x = pd.DataFrame(vars_values[0], columns=['Var x']) 
+    df_var_y = pd.DataFrame(vars_values[1], columns=['Var y'])
+
+    df = pd.concat([
+        pd.read_csv('simulation_'+city+'_per_week.csv')
+    ])
+
+    df_purchase_cost_per_week = df['Costo compra'].to_frame()
+    df_inventory_cost_per_week = df['Costo inventario'].to_frame()
+
+    df_purchase = df_var_x.mul(df_purchase_cost_per_week.values)
+    df_purchase.columns = ['Costos compra']
+    df_purchase.index.names = ['Semana']
+
+    df_inventory = df_var_y.mul(df_inventory_cost_per_week.values)
+    df_inventory.columns = ['Costos inventario']
+    df_inventory.index.names = ['Semana']
+
+    df_final = pd.concat([df_var_x.stack(), df_var_y.stack(), df_purchase.stack(), df_inventory.stack()], axis=0).unstack()
+    df_final.to_csv('solved_'+city+'.csv')
 
 if __name__ == "__main__":
     solver_model(1, 1, 1, 1)

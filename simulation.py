@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import csv
+from solver import solver_model
 
 # Initialize parameters
 Locations = [{'name': 'Curicó', 'population': '102710'},
@@ -123,10 +124,10 @@ def simulate(ventilator):
             })
         f.close()
 
-    summary()
+    summary(gamma)
 
 # Group simulation stats by weeks
-def summary():
+def summary(gamma):
     # Read csv
     curico_data = pd.read_csv('simulation_Curicó.csv', encoding='iso-8859-1')
     linares_data = pd.read_csv('simulation_Linares.csv', encoding='iso-8859-1')
@@ -154,16 +155,21 @@ def summary():
                         'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
                     })
 
+    # Rename index
+    curico_weeks_cum_data.index.names = ['Semana']
+    print(curico_weeks_cum_data.index)
+
     # Calculate required ventilators
     curico_weeks_cum_data['Ventiladores requeridos'] = (
             curico_weeks_cum_data['Maximo activos criticos acumulado'] 
             - curico_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
 
+    # Calculate purchase and inventory costs
+    curico_weeks_cum_data['Costo inventario'] = gamma * alpha * np.exp((-1 * beta * (curico_weeks_cum_data.index*7))/2790)
+    curico_weeks_cum_data['Costo compra'] = (1/gamma) * (1/alpha) * np.exp((beta * (curico_weeks_cum_data.index*7))/2790)
+
     # Drop unnecessary columns
     curico_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
-
-    # Rename index
-    curico_weeks_cum_data.index.names = ['Semana']
 
     ### Second city ###
     linares_weeks_cum_data = linares_data.groupby(
@@ -187,16 +193,20 @@ def summary():
                         'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
                     })
 
+    # Rename index
+    linares_weeks_cum_data.index.names = ['Semana']
+
     # Calculate required ventilators
     linares_weeks_cum_data['Ventiladores requeridos'] = (
             linares_weeks_cum_data['Maximo activos criticos acumulado'] 
             - linares_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
 
+    # Calculate purchase and inventory costs
+    linares_weeks_cum_data['Costo inventario'] = gamma * alpha * np.exp((-1 * beta * (linares_weeks_cum_data.index*7))/2790)
+    linares_weeks_cum_data['Costo compra'] = (1/gamma) * (1/alpha) * np.exp((beta * (linares_weeks_cum_data.index*7))/2790)
+
     # Drop unnecessary columns
     linares_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
-
-    # Rename index
-    linares_weeks_cum_data.index.names = ['Semana']
 
     ### Third city ###
     talca_weeks_cum_data = talca_data.groupby(
@@ -220,16 +230,20 @@ def summary():
                         'Maximo activos criticos acumulado': ('Activos criticos totales', 'max'),
                     })
 
+    # Rename index
+    talca_weeks_cum_data.index.names = ['Semana']
+
     # Calculate required ventilators
     talca_weeks_cum_data['Ventiladores requeridos'] = (
             talca_weeks_cum_data['Maximo activos criticos acumulado'] 
             - talca_weeks_cum_data['Maximo activos criticos acumulado'].shift().fillna(0)).clip(lower=0)
 
+    # Calculate purchase and inventory costs
+    talca_weeks_cum_data['Costo inventario'] = gamma * alpha * np.exp((-1 * beta * (talca_weeks_cum_data.index*7))/2790)
+    talca_weeks_cum_data['Costo compra'] = (1/gamma) * (1/alpha) * np.exp((beta * (talca_weeks_cum_data.index*7))/2790)
+
     # Drop unnecessary columns
     talca_weeks_cum_data.drop(['Dia', 'Maximo activos criticos acumulado'], axis=1, inplace=True)
-
-    # Rename index
-    talca_weeks_cum_data.index.names = ['Semana']
 
 
     # Write info in csv
@@ -253,10 +267,15 @@ def merge_csv():
     ])
 
     result_per_day = df_per_day.groupby('Dia', as_index=False).sum()
-    result_per_week = df_per_week.groupby('Semana', as_index=False).sum()
+    result_per_week = df_per_week.groupby(['Semana','Costo compra','Costo inventario'], as_index=False).sum()
 
     result_per_day.to_csv('simulation_total.csv', index=False)
     result_per_week.to_csv('simulation_total_per_week.csv', index=False)
+
+    solver()
+
+def solver():
+    solver_model()
 
 if __name__ == "__main__":
     simulate()
