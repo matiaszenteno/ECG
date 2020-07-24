@@ -157,7 +157,6 @@ def summary(gamma):
 
     # Rename index
     curico_weeks_cum_data.index.names = ['Semana']
-    print(curico_weeks_cum_data.index)
 
     # Calculate required ventilators
     curico_weeks_cum_data['Ventiladores requeridos'] = (
