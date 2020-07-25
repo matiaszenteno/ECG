@@ -18,7 +18,7 @@ tq = 21
 simulation_time = 120
 
 def open_book(name):
-    f = open(name, "w")
+    f = open(name, 'w', newline='')
 
     # Column names
     fnames = ['Dia',
