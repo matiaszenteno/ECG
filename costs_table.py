@@ -94,10 +94,28 @@ class SimpleTable(tk.Frame):
         self._widgets.append(current_row)
 
         # Get costs
+        curico_data_inventory = pd.read_csv('solved_inventory_costs_Curicó.csv', encoding='iso-8859-1')
+        linares_data_inventory = pd.read_csv('solved_inventory_costs_Linares.csv', encoding='iso-8859-1')
+        talca_data_inventory = pd.read_csv('solved_inventory_costs_Talca.csv', encoding='iso-8859-1')
         total_data_inventory = pd.read_csv('solved_inventory_costs_total.csv', encoding='iso-8859-1')
 
-        purchase_costs = total_data["Costos compra"].sum()
-        inventory_costs = total_data_inventory["Costos inventario"].sum()
+        curico_purchase_costs = curico_data["Costos compra"].sum()
+        linares_purchase_costs = linares_data["Costos compra"].sum()
+        talca_purchase_costs = talca_data["Costos compra"].sum()
+        total_purchase_costs = total_data["Costos compra"].sum()
+        purchase_costs = [curico_purchase_costs,
+                          linares_purchase_costs,
+                          talca_purchase_costs,
+                          total_purchase_costs]
+
+        curico_inventory_costs = curico_data_inventory["Costos inventario"].sum()
+        linares_inventory_costs = linares_data_inventory["Costos inventario"].sum()
+        talca_inventory_costs = talca_data_inventory["Costos inventario"].sum()
+        total_inventory_costs = total_data_inventory["Costos inventario"].sum()
+        inventory_costs = [curico_inventory_costs,
+                          linares_inventory_costs,
+                          talca_inventory_costs,
+                          total_inventory_costs]
 
         # Set row 21 labels
         current_row = []
@@ -105,20 +123,14 @@ class SimpleTable(tk.Frame):
         purchaseLabel = tk.Label(self, text="Costos compra", 
                                     borderwidth=0, width=15, font=("Courier", 10))
         purchaseLabel.grid(row=21, column=0, sticky="nsew", padx=1, pady=1)
-        purchaseValueLabel = tk.Label(self, text=str(purchase_costs), 
-                                    borderwidth=0, width=15, font=("Courier", 10))
-        purchaseValueLabel.grid(row=21, column=1, sticky="nsew", padx=1, pady=1)
 
-        for column in range(2,5):
-
-            label = tk.Label(self, text="", 
+        for column in range(1,5):
+            label = tk.Label(self, text=str(purchase_costs[column - 1]), 
                                 borderwidth=0, width=30, font=("Courier", 10))
             label.grid(row=21, column=column, sticky="nsew", padx=1, pady=1)
             current_row.append(label)
 
         current_row.append(purchaseLabel)
-        current_row.append(purchaseValueLabel)
-
         self._widgets.append(current_row)
 
         # Set row 22 labels
@@ -127,20 +139,14 @@ class SimpleTable(tk.Frame):
         inventoryLabel = tk.Label(self, text="Costos de inventario", 
                                     borderwidth=0, width=15, font=("Courier", 10))
         inventoryLabel.grid(row=22, column=0, sticky="nsew", padx=1, pady=1)
-        inventoryValueLabel = tk.Label(self, text=str(inventory_costs), 
-                                    borderwidth=0, width=15, font=("Courier", 10))
-        inventoryValueLabel.grid(row=22, column=1, sticky="nsew", padx=1, pady=1)
 
-        for column in range(2,5):
-
-            label = tk.Label(self, text="", 
+        for column in range(1,5):
+            label = tk.Label(self, text=str(inventory_costs[column - 1]), 
                                 borderwidth=0, width=30, font=("Courier", 10))
             label.grid(row=22, column=column, sticky="nsew", padx=1, pady=1)
             current_row.append(label)
 
         current_row.append(inventoryLabel)
-        current_row.append(inventoryValueLabel)
-
         self._widgets.append(current_row)
 
         # Set row 23 labels
@@ -149,20 +155,14 @@ class SimpleTable(tk.Frame):
         inventoryLabel = tk.Label(self, text="Costos totales", 
                                     borderwidth=0, width=15, font=("Courier", 10))
         inventoryLabel.grid(row=23, column=0, sticky="nsew", padx=1, pady=1)
-        inventoryValueLabel = tk.Label(self, text=str(purchase_costs + inventory_costs), 
-                                    borderwidth=0, width=15, font=("Courier", 10))
-        inventoryValueLabel.grid(row=23, column=1, sticky="nsew", padx=1, pady=1)
 
-        for column in range(2,5):
-
-            label = tk.Label(self, text="", 
+        for column in range(1,5):
+            label = tk.Label(self, text=str(purchase_costs[column - 1] + inventory_costs[column - 1]), 
                                 borderwidth=0, width=30, font=("Courier", 10))
             label.grid(row=23, column=column, sticky="nsew", padx=1, pady=1)
             current_row.append(label)
 
         current_row.append(inventoryLabel)
-        current_row.append(inventoryValueLabel)
-
         self._widgets.append(current_row) 
 
     # Set text of a cell
